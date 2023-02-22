@@ -1,3 +1,4 @@
+from PIL import Image
 import re
 
 class Img2zpl:
@@ -5,11 +6,17 @@ class Img2zpl:
     def __init__(self, zpl_version = 2):
         self.zpl_version = zpl_version
 
-    def convert(self, image):
-        # Convert to grayscale
-        image = image.convert('L')
+    def toZPL(self, image, with_cmd = False):
 
         w,h = image.size
+
+        # Convert to RGB
+        temp = image
+        image = Image.new('RGB', (w, h), 'white')
+        image.paste(temp, mask=temp.split()[3])
+
+        # Convert to grayscale
+        image = image.convert('L')
 
         # The width of the image must be multiple of 8
         if w % 8 != 0:
@@ -30,10 +37,7 @@ class Img2zpl:
             currentLine = ''
             for x in range(w):    
                 grayscale = image.getpixel((x, y))
-                if grayscale == 255:
-                    currentLine += '0'
-                else:
-                    currentLine += '1'
+                currentLine += ('0' if grayscale == 255 else '1')
             
             currentBytes = []
             for i in range(0, len(currentLine), 8):
@@ -51,7 +55,16 @@ class Img2zpl:
             out += self.compressRow(row, lastRow)
             lastRow = row
 
-        return 'A,' + str(len(out.encode('utf-8'))) + ',' + str(dataLength) + ',' + str(rowLength) + ',' + out 
+        zpl = 'A,'
+        zpl += str(len(out.encode('utf-8'))) + ','
+        zpl += str(dataLength) + ','
+        zpl += str(rowLength) + ','
+        zpl += out
+        
+        if with_cmd == False:
+            return zpl
+        else:
+            return '^GF' + zpl
     
     
     def compressRow(self, current, last):

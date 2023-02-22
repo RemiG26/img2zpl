@@ -72,28 +72,18 @@ def main(argv):
         image = image.resize((resizedWidth, hsize), Image.Resampling.LANCZOS)
         width, height = image.size
 
-    # The image should be under 2000x2000
-    if width > 2000 or height > 2000:
-        raise Exception('Image too big (max: 2000, 2000): ' + width + ',' + height)
-
-    # Convert to RGB
-    temp = image
-    image = Image.new('RGB', (width, height), 'white')
-    image.paste(temp, mask=temp.split()[3])
-
     # Get the ZPL code
     img2zpl = Img2zpl()
-    zpl = img2zpl.convert(image)
+    zpl = img2zpl.toZPL(image, True)
 
     if zplPath != '':
         # Write the output file
-        output.write('^GF')
         output.write(zpl)
 
         # Close the file
         output.close()
     else:
-        print('^GF' + zpl)
+        print(zpl)
 
 
 if __name__ == '__main__':
