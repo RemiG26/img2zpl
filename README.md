@@ -29,7 +29,10 @@ Run `img2zpl --help` for details.
 
 ```bash
 
-# Convert an image to zpl
+# Convert an image to zpl and output the result in stdout
+img2zpl -i original.png
+
+# Convert an image to zpl and save the result in a file
 img2zpl -i original.png -o output_zpl.txt
 
 # Resize and then convert to zpl

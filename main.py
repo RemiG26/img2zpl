@@ -109,13 +109,14 @@ def main(argv):
             usage()
             sys.exit(2)
 
-    if imgPath == '' or zplPath == '':
+    if imgPath == '':
         usage()
         sys.exit(2)
 
-    # Open the file and clears it
-    output = open(zplPath, "w")
-    output.truncate(0)
+    # Open the file and clears it if the output need to save in a file
+    if zplPath != '':
+        output = open(zplPath, "w")
+        output.truncate(0)
 
     # Open the image
     image = Image.open(imgPath).convert('RGBA')
@@ -152,12 +153,15 @@ def main(argv):
     # Get the ZPL code
     zpl = img2zplAscii(image, width, height)
 
-    # Write the output file
-    output.write('^GF')
-    output.write(zpl)
+    if zplPath != '':
+        # Write the output file
+        output.write('^GF')
+        output.write(zpl)
 
-    # Close the file
-    output.close()
+        # Close the file
+        output.close()
+    else:
+        print('^GF' + zpl)
 
 
 if __name__ == '__main__':
