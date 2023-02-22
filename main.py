@@ -1,64 +1,35 @@
+import sys 
 from PIL import Image
-import math
-import getopt, sys
+from argparse import ArgumentParser
 from Img2zpl import Img2zpl
 
-__VERSION__='0.0.3'
-
-def usage():
-    print("Usage:")
-    print("\timg2zpl -i <img path> -o <zpl result path>\n")
-    print("Options:\n")
-    print("\t-h --help\tShow this screen")
-    print("\t-v --version\tShow version")
-    print("\t-i --input\tImage path to convert")
-    print("\t-o --output\tFile containing the zpl")
+__VERSION__ = '0.0.4'
 
 def main(argv):
 
-    try:
-        opts, args = getopt.getopt(argv, 'i:o:vhw:', ['input=', 'output=', 'version', 'help', 'width='])
-    except(getopt.GetoptError, e):
-        usage()
-        sys.exit(2)
+    # Parse input arguments
+    parser = ArgumentParser()
+    parser.add_argument('-i', '--input', required=True, help='Path of the image file')
+    parser.add_argument('-o', '--output', help="Path of the result file, default stdout", default="stdout")
+    parser.add_argument('-w', '--width', help="Width of the zpl image", type=int)
+    parser.add_argument('--zpl', help="Version of ZPL, default 2", type=int, default=2)
+    parser.add_argument('-v', '--version', help="Show the version", action="version", version='%(prog)s {version}'.format(version=__VERSION__))
 
-    imgPath = ''
-    zplPath = ''
-    resizedWidth = 0
-    for opt, arg in opts:
-        if opt in ('--input', '-i'):
-            imgPath = arg
-        elif opt in ('--output', '-o'):
-            zplPath = arg
-        elif opt in ('--version', '-v'):
-            print(VERSION)
-            sys.exit(2)
-        elif opt in ('--width', '-w'):
-            if arg.isnumeric():
-                resizedWidth = int(arg)
-            else:
-                usage()
-                sys.exit(2)
-        else:
-            usage()
-            sys.exit(2)
-
-    if imgPath == '':
-        usage()
-        sys.exit(2)
+    args = parser.parse_args()
 
     # Open the file and clears it if the output need to save in a file
-    if zplPath != '':
-        output = open(zplPath, "w")
+    if args.output != 'stdout':
+        output = open(args.output, "w")
         output.truncate(0)
 
     # Open the image
-    image = Image.open(imgPath).convert('RGBA')
+    image = Image.open(args.input).convert('RGBA')
 
     # Get image size
     width,height = image.size
 
-    if resizedWidth == 0:
+    resizedWidth = args.width
+    if resizedWidth == None:
         resizedWidth = width
 
     # Make sure the width is a mutiple of 8
@@ -73,10 +44,10 @@ def main(argv):
         width, height = image.size
 
     # Get the ZPL code
-    img2zpl = Img2zpl()
+    img2zpl = Img2zpl(args.zpl)
     zpl = img2zpl.toZPL(image, True)
 
-    if zplPath != '':
+    if args.output != 'stdout':
         # Write the output file
         output.write(zpl)
 
