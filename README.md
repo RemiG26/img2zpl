@@ -15,7 +15,7 @@ Img2Zpl is a tool to convert an image to a zpl code so it can be included on an 
 - [x] Support <span style='color: red'>ONLY</span>> ZPL V2
 - [x] Convert to grayscale
 - [x] Support PNG with alpha
-- [ ] The image can be resized
+- [x] The image can be resized
 
 ## Requirements
 
@@ -31,5 +31,8 @@ Run `img2zpl --help` for details.
 
 # Convert an image to zpl
 img2zpl -i original.png -o output_zpl.txt
+
+# Resize and then convert to zpl
+img2zpl -i original.png -o output_zpl.txt -w 800
 
 ```

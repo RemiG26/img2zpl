@@ -3,7 +3,7 @@ import re
 import math
 import getopt, sys
 
-VERSION='0.0.2'
+__VERSION__='0.0.3'
 
 # Start the conversion
 def img2zplAscii(img, w, h):
@@ -83,14 +83,14 @@ def usage():
 def main(argv):
 
     try:
-        opts, args = getopt.getopt(argv, 'i:o:vh', ['input=', 'output=', 'version', 'help'])
+        opts, args = getopt.getopt(argv, 'i:o:vhw:', ['input=', 'output=', 'version', 'help', 'width='])
     except(getopt.GetoptError, e):
-        print(e)
         usage()
         sys.exit(2)
 
     imgPath = ''
     zplPath = ''
+    resizedWidth = 0
     for opt, arg in opts:
         if opt in ('--input', '-i'):
             imgPath = arg
@@ -99,6 +99,12 @@ def main(argv):
         elif opt in ('--version', '-v'):
             print(VERSION)
             sys.exit(2)
+        elif opt in ('--width', '-w'):
+            if arg.isnumeric():
+                resizedWidth = int(arg)
+            else:
+                usage()
+                sys.exit(2)
         else:
             usage()
             sys.exit(2)
@@ -117,26 +123,34 @@ def main(argv):
     # Get image size
     width,height = image.size
 
-    # Resize the image to have a width multiple of 8
-    mis = width % 8
-    if mis != 0:
-        width += (8 - mis)
+    if resizedWidth == 0:
+        resizedWidth = width
+
+    # Make sure the width is a mutiple of 8
+    if resizedWidth % 8 != 0:
+        resizedWidth += (8 - (resizedWidth % 8))
+
+    # Resize the image if needed
+    if width != resizedWidth:
+        wpercent = (resizedWidth/float(width))
+        hsize = int((float(height)) * float(wpercent))
+        image = image.resize((resizedWidth, hsize), Image.Resampling.LANCZOS)
+        width, height = image.size
 
     # The image should be under 2000x2000
     if width > 2000 or height > 2000:
         raise Exception('Image too big (max: 2000, 2000): ' + width + ',' + height)
 
-    imgfinal=Image.new('RGB', (width, height), 'white')
-
-    imgfinal.paste(image, mask=image.split()[3])
-
-    imgfinal.save('foo.png')
+    # Convert to RGB
+    temp = image
+    image = Image.new('RGB', (width, height), 'white')
+    image.paste(temp, mask=temp.split()[3])
 
     # Convert to grayscale
-    imgfinal.convert('L')
+    image.convert('L')
 
     # Get the ZPL code
-    zpl = img2zplAscii(imgfinal, width, height)
+    zpl = img2zplAscii(image, width, height)
 
     # Write the output file
     output.write('^GF')
