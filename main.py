@@ -1,75 +1,9 @@
 from PIL import Image
-import re
 import math
 import getopt, sys
+from Img2zpl import Img2zpl
 
 __VERSION__='0.0.3'
-
-# Start the conversion
-def img2zplAscii(img, w, h):
-    if w % 8 != 0:
-        raise Exception("Invalid width, not a modulo of 8: " + w)
-    lastRow = ''
-    n = (w * h) / 8
-    dataLength=f'{n:01}'
-    n = w / 8
-    rowLength=f'{n:01}'
-    out = ''
-    for y in range(h):
-        currentLine = ''
-        for x in range(w):    
-            r, g, b = img.getpixel((x, y))
-            if r == 0 and g == 0 and b == 0:
-                currentLine += '1'
-            else:
-                currentLine += '0'
-        
-        currentBytes = []
-        for i in range(0, len(currentLine), 8):
-            currentBytes.append(currentLine[i:i+8])
-
-        # Add leading zeros to the last byte in < 8
-        n = currentBytes.pop()
-        currentBytes.append(f'{int(n):08}')
-
-        row = ''
-        for b in currentBytes:
-            row += format(int(b,2), '02x')
-
-        out += compressZplAsciiLine(row, lastRow)
-        # out += row
-        lastRow = row
-
-    return 'A,' + str(len(out.encode('utf-8'))) + ',' + str(dataLength) + ',' + str(rowLength) + ',' + out 
-
-def compressZplAsciiLine(current, last):
-    if current == last:
-        return ':'
-    
-    outline = re.sub(r'0+$', ',', current)
-    outline = re.sub(r'F+$', '!', outline)
-
-    def callback(match):
-        original = match.group(0)
-        repeat = len(original)
-        count = ""
-
-        if repeat > 400:
-            count += "z" * (repeat // 400)
-            repeat %= 400
-
-        if repeat > 19:
-            count += chr(ord('f') + (repeat // 20))
-            repeat %= 20
-
-        if repeat > 0:
-            count += chr(ord('F') + repeat)
-
-        return count + original[1]
-
-    outline = re.sub(r'(.)(\1{2,})', callback, outline)
-
-    return outline
 
 def usage():
     print("Usage:")
@@ -147,11 +81,9 @@ def main(argv):
     image = Image.new('RGB', (width, height), 'white')
     image.paste(temp, mask=temp.split()[3])
 
-    # Convert to grayscale
-    image.convert('L')
-
     # Get the ZPL code
-    zpl = img2zplAscii(image, width, height)
+    img2zpl = Img2zpl()
+    zpl = img2zpl.convert(image)
 
     if zplPath != '':
         # Write the output file
