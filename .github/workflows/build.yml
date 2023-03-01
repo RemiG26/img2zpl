@@ -2,7 +2,8 @@ name: Package img2zpl
 
 on:
   push:
-    branches: [ master ]
+    tags:
+      - "v*.*.*"
 
 jobs:
   build:
