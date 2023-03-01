@@ -1,0 +1,26 @@
+name: Package img2zpl
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.7'
+    
+    - run: pip install -r requirements.txt
+
+    - name: Package Application
+      run: pyinstaller --clean -y img2zpl.spec
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: img2zpl-linux
+        path: dist/img2zpl
